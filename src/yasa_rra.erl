@@ -102,8 +102,9 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 path_from_key(Key) ->
+    SlashedKey = binary:replace(Key, <<".">>, <<"/">>, [global]),
     PrivDir = yasa_app:priv_dir(),
-    [PrivDir, "/", binary_to_list(Key), ".yasa"].
+    [PrivDir, "/storage/", binary_to_list(SlashedKey), ".yasa"].
 
 check_type_integrity(gauge, set) -> ok;
 check_type_integrity(counter, incr) -> ok;

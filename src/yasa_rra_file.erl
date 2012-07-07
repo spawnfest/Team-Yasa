@@ -6,9 +6,8 @@
 -module(yasa_rra_file).
 -export([load_from_file/1, save_to_file/2]).
 
-load_from_file(Path) when is_binary(Path) ->
-	load_from_file(binary_to_list(Path));
 load_from_file(Path) when is_list(Path) ->
+	ok = filelib:ensure_dir(Path), 
     case file:read_file(Path) of
         {ok, Binary} ->  binary_to_term(Binary);
         {error, enoent} ->  {error, not_found};
