@@ -1,4 +1,4 @@
--module(yasa_basic_handler).
+-module(yasa_static_handler).
 
 -export([init/3, handle/2, terminate/2]).
 
