@@ -1,6 +1,6 @@
 -module(yasa_rra_queue).
 -include("rra_queue.hrl").
--export([new/3, push/2, push_check_previous/2]).
+-export([new/3, push_gauge/2, push_counter/2]).
 
 new(Ratio, Step, Size) ->
     #rra_queue{
@@ -11,7 +11,7 @@ new(Ratio, Step, Size) ->
         previous_queue = undefined
     }.
 
-push(Val, RRAQueue = #rra_queue{size = Size, queue = Queue}) ->
+push_gauge(Val, RRAQueue = #rra_queue{size = Size, queue = Queue}) ->
     Queue2 = queue:in({ts(), Val}, Queue),
     Queue3 = case queue:len(Queue2) > Size of
         true -> queue:out(Queue2);
@@ -19,7 +19,7 @@ push(Val, RRAQueue = #rra_queue{size = Size, queue = Queue}) ->
     end,
     RRAQueue#rra_queue{queue = Queue3}.
 
-push_check_previous(Val, RRAQueue = #rra_queue{size = Size, 
+push_counter(Val, RRAQueue = #rra_queue{size = Size, 
     queue = Queue, ratio = Ratio, previous_queue = Prev}) ->
     Sum = sum_last_x(Prev, Ratio - 1) + Val,
     Queue2 = queue:in({ts(), Sum}, Queue),

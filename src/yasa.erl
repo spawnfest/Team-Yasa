@@ -1,9 +1,12 @@
 -module(yasa).
--export([set/3, incr/3, get/3]).
+-export([start/0, set/3, incr/3, get/3]).
 
 %%===================================================================
 %% Public API
 %%===================================================================
+start() ->
+    application:start(cowboy),
+    application:start(yasa).
 
 set(Key, Timestamp, Value) ->
     send(set, Key, Timestamp, Value).
@@ -19,12 +22,8 @@ get(Key, Start, End) ->
 %%===================================================================
 
 send(Type, Key, Arg1, Arg2) ->
-    case lookup(Key, Type) of
-        {error, Reason} ->
-            {error, Reason};
-        {ok, Pid} ->
-            gen_server:call(Pid, {Type, Arg1, Arg2})
-    end.
+    {ok, Pid} = lookup(Key, Type),
+    gen_server:call(Pid, {Type, Arg1, Arg2}).
 
 lookup(Key, Type) ->
     case yasa_pid_store:lookup(Key) of
