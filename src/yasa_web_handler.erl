@@ -69,13 +69,8 @@ terminate(_Req, _State) ->
 % Internal Functions
 % ============================================================================
 
-jsonp(undefined, Reply) -> Reply;
-jsonp(Callback, Reply) ->
-    [Callback, <<"(">>, Reply, <<");">>].
-
 reply(Key, <<"get">>, Proplist) ->
-    Range = pval(<<"range">>, Proplist),
-    [Start, End] = binary:split(Range, <<",">>), 
+    [Start, End] = handle_range(pval(<<"range">>, Proplist)),
 
     case yasa:get(Key, Start, End) of
         {error, Reason} ->
@@ -85,7 +80,6 @@ reply(Key, <<"get">>, Proplist) ->
     end;
 
 reply(Key, <<"set">>, Proplist) ->
-    Timestamp = pval(<<"timestamp">>, Proplist),
     Value = pval(<<"value">>, Proplist),
 
     case yasa:set(Key, Value) of
@@ -96,7 +90,6 @@ reply(Key, <<"set">>, Proplist) ->
     end;
 
 reply(Key, <<"incr">>, Proplist) ->
-    Timestamp = pval(<<"timestamp">>, Proplist),
     Value = pval(<<"value">>, Proplist),
 
     case yasa:incr(Key, Value) of
@@ -109,9 +102,49 @@ reply(Key, <<"incr">>, Proplist) ->
 reply(_, _, _) ->
     {500, [{<<"error">>, <<"invalid request">>}]}.
 
+jsonp(undefined, Reply) -> Reply;
+jsonp(Callback, Reply) ->
+    [Callback, <<"(">>, Reply, <<");">>].
+
+handle_range(String) when is_binary(String) ->
+    Regex = "-(\\d+)(hour|min|sec|day|month|year)",
+    [Size_, Period_] = case re:run(String, Regex) of
+        nomatch ->
+            {error, nomatch};
+        Match ->
+            io:format("Matches = ~p~n", [Match]),
+            parse_matches(String, Match)
+    end,
+    Size = list_to_integer(binary_to_list(Size_)),
+    Period = list_to_atom(binary_to_list(Period_)),
+    Reply = to_range(Size, Period),
+    Reply.
+
+to_range(N, Period) ->
+    [timestamp() - seconds_in(N, Period), timestamp()].
+
+seconds_in(N, year)   -> N * 365 * 24 * 60 * 60;
+seconds_in(N, month)  -> N * 31 * 24 * 60 * 60;
+seconds_in(N, day)    -> N * 24 * 60 * 60;
+seconds_in(N, hour)   -> N * 60 * 60;
+seconds_in(N, min)    -> N * 60;
+seconds_in(N, sec)    -> N.
+    
+parse_matches(String, {match, [_|T]}) ->
+    parse_matches(String, T, []).
+parse_matches(_, [], Acc) ->
+    Acc;
+parse_matches(String, [{Start, End} | Rest], Acc) ->
+    <<_:Start/binary, Match:End/binary, _/binary>> = String,
+    parse_matches(String, Rest, Acc ++ [Match]).
+
+
 pval(X, Req) when element(1, Req) == http_req ->
     {Val, _} = cowboy_http_req:qs_val(X, Req),
     Val;
-
 pval(X, PL) ->
     proplists:get_value(X, PL).
+
+timestamp() ->
+    {Mega, Secs, _} = now(),
+    Mega*1000000 + Secs.
