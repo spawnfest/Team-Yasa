@@ -112,7 +112,6 @@ handle_range(String) when is_binary(String) ->
         nomatch ->
             {error, nomatch};
         Match ->
-            io:format("Matches = ~p~n", [Match]),
             parse_matches(String, Match)
     end,
     Size = list_to_integer(binary_to_list(Size_)),
