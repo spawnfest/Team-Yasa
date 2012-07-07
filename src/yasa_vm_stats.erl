@@ -34,6 +34,7 @@ start_link() ->
 %%%===================================================================
 
 init([]) ->
+    schedule_report(?REPORT_TIME),
     {ok, #state{}}.
 
 handle_call(_Request, _From, State) ->
@@ -51,9 +52,9 @@ handle_info(report, State) ->
     yasa:set(<<"stats.total">>, ?PVAL(total, MemoryUsage)),
     yasa:set(<<"stats.memory_usage">>, ?PVAL(processes, MemoryUsage)),
     yasa:set(<<"stats.processes_used">>, ?PVAL(processes_used, MemoryUsage)),
-    yasa:set(<<"stats.memory_usage">>, ?PVAL(system, MemoryUsage)),
+    yasa:set(<<"stats.system">>, ?PVAL(system, MemoryUsage)),
     yasa:set(<<"stats.atom">>, ?PVAL(atom, MemoryUsage)),
-    yasa:set(<<"stats.memory_usage">>, ?PVAL(atom_used, MemoryUsage)),
+    yasa:set(<<"stats.atom_used">>, ?PVAL(atom_used, MemoryUsage)),
     yasa:set(<<"stats.binary">>, ?PVAL(binary, MemoryUsage)),
     yasa:set(<<"stats.code">>, ?PVAL(code, MemoryUsage)),
     yasa:set(<<"stats.ets">>, ?PVAL(ets, MemoryUsage)),

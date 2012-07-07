@@ -27,7 +27,7 @@
 %%%===================================================================
 
 start_link(Key, Type) ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [Key, Type], []).
+    gen_server:start_link(?MODULE, [Key, Type], []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -37,9 +37,9 @@ init([Key, Type]) ->
     gen_server:cast(self(), {init, [Key, Type]}), 
     {ok, #state{}}.
 
-handle_call({set, _TS, Value}, _From, State = #state{type = gauge}) ->
+handle_call({set, Value}, _From, State = #state{type = gauge}) ->
     {reply, ok, State#state{value = Value}};
-handle_call({incr, _TS, Value}, _From, State = #state{type = counter, value = OldValue}) ->
+handle_call({incr, Value}, _From, State = #state{type = counter, value = OldValue}) ->
     {reply, ok, State#state{value = Value + OldValue}};
 handle_call({get, Start, End}, _From, State = #state{rra_queues = RQS}) ->
     WhichQueue = select_queue(Start, RQS),
@@ -51,6 +51,7 @@ handle_call(_Request, _From, State) ->
 
 handle_cast({init, [SchemaDotKey, Req]}, State) ->
     Path = path_from_key(SchemaDotKey),
+    self() ! write_to_disk,
     case yasa_rra_file:load_from_file(Path) of
         {Type, Retentions, RRAQueues} ->
             ok = check_type_integrity(Type, Req),
@@ -74,14 +75,18 @@ handle_info({tick, _Step}, State = #state{type = gauge, value = Value, rra_queue
     counter = Counter, retentions = Rets, path = Path}) ->
     _Tref = schedule_tick(RQS),
     NewRQS = insert_into_gauges(Value, Counter, RQS),
-    yasa_rra_file:save_to_file(Path, {gauge, Rets, NewRQS}),
     {noreply, State#state{counter = Counter + 1, rra_queues = NewRQS}};
 handle_info({tick, _Step}, State = #state{type = counter, value = Value, rra_queues = RQS,
     counter = Counter, retentions = Rets,path = Path}) ->
     _Tref = schedule_tick(RQS),
     NewRQS = insert_into_counters(Value, Counter, RQS),
-    yasa_rra_file:save_to_file(Path, {counter, Rets, NewRQS}),
     {noreply, State#state{counter = Counter + 1, value = 0, rra_queues = NewRQS}};
+handle_info(write_to_disk, State = #state{rra_queues = RQS, type = Type, 
+    retentions = Rets,path = Path}) ->
+    yasa_rra_file:save_to_file(Path, {Type, Rets, RQS}),
+    After = crypto:rand_uniform(9000, 12000), 
+    erlang:send_after(After, self(), write_to_disk),
+    {noreply, State};
 handle_info(_Info, State) ->
     {noreply, State}.
 

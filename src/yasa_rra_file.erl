@@ -21,8 +21,7 @@ load_from_file(Path) when is_list(Path) ->
 %%% @end
 %%%----------------------------------
 save_to_file(Path, {Type, Retentions, RQS}) ->
-    R = file:write_file(Path, term_to_binary({Type, Retentions, RQS})),
-    io:format("~p     ~p~n", [Path, R]).
+    R = file:write_file(Path, term_to_binary({Type, Retentions, RQS})).
 
 %%%===================================================================
 %%% Internal functions

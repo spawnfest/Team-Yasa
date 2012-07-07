@@ -88,7 +88,7 @@ reply(Key, <<"set">>, Proplist) ->
     Timestamp = pval(<<"timestamp">>, Proplist),
     Value = pval(<<"value">>, Proplist),
 
-    case yasa:set(Key, Value, Timestamp) of
+    case yasa:set(Key, Value) of
         {error, Reason} ->
             {500, [{<<"error">>, ?l2b(Reason)}]};
         Reply ->
@@ -99,7 +99,7 @@ reply(Key, <<"incr">>, Proplist) ->
     Timestamp = pval(<<"timestamp">>, Proplist),
     Value = pval(<<"value">>, Proplist),
 
-    case yasa:incr(Key, Value, Timestamp) of
+    case yasa:incr(Key, Value) of
         {error, Reason} ->
             {500, [{<<"error">>, ?l2b(Reason)}]};
         Reply ->
