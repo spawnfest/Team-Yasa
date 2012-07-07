@@ -1,4 +1,4 @@
--module(yasa_web_handler).
+-module(yasa_api_handler).
 
 %http callbacks
 -export([init/3, handle/2, terminate/2]).

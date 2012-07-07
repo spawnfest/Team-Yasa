@@ -4,8 +4,13 @@
 %%% @end
 %%%-------------------------------------------------------------------
 -module(yasa_rra_file).
--export([load_from_file/1, save_to_file/2]).
+-export([load_from_file/1, save_to_file/2, get_keys/0]).
 
+%%%----------------------------------
+%%% @doc
+%%% Read retention table from the given path
+%%% @end
+%%%----------------------------------
 load_from_file(Path) when is_list(Path) ->
 	ok = filelib:ensure_dir(Path), 
     case file:read_file(Path) of
@@ -16,12 +21,36 @@ load_from_file(Path) when is_list(Path) ->
 
 %%%----------------------------------
 %%% @doc
-%%% Dump retention tables to disk
+%%% Dump retention table to given path
 %%% @end
 %%%----------------------------------
 save_to_file(Path, {Type, Retentions, RQS}) ->
-    R = file:write_file(Path, term_to_binary({Type, Retentions, RQS})).
+    file:write_file(Path, term_to_binary({Type, Retentions, RQS})).
+
+%%%----------------------------------
+%%% @doc
+%%% List all the keys stored in storage dir
+%%% @end
+%%%----------------------------------
+get_keys() ->
+	Root = [yasa_app:priv_dir(), "storage/*"],
+	walk_directory_tree(Root).
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+walk_directory_tree(Root) ->
+	SubTree = lists:map(fun(Elem) ->
+		case filelib:is_dir(Elem) of
+			true -> walk_directory_tree([Elem, "/*"]);
+			false -> get_name_from_path(Elem)
+		end
+	end,filelib:wildcard(Root)),
+	Name = get_name_from_path(Root),
+	{Name, SubTree}.
+
+get_name_from_path(Path) when is_list(Path)->
+	FlatPath = lists:flatten(Path), 
+	{match, [Name]} = re:run(FlatPath, <<"(/\\w+)*/(?<NAME>\\w+)(/\\*)?">>,
+		[{capture, ['NAME'], binary}]),
+	Name.

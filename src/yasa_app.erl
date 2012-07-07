@@ -37,8 +37,8 @@ start_web_server() ->
 	Dispatch = [
 	    %% {Host, list({Path, Handler, Opts})}
 	    {'_', [
-	    	{[<<"api">>, action], yasa_web_handler, []},
-	    	{[], yasa_basic_handler, []}
+	    	{[<<"api">>, action], yasa_api_handler, []},
+	    	{[], yasa_static_handler, []}
 		]}
 	],
 	%% Name, NbAcceptors, Transport, TransOpts, Protocol, ProtoOpts

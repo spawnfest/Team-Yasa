@@ -72,12 +72,12 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 handle_info({tick, _Step}, State = #state{type = gauge, value = Value, rra_queues = RQS,
-    counter = Counter, retentions = Rets}) ->
+    counter = Counter}) ->
     _Tref = schedule_tick(RQS),
     NewRQS = insert_into_gauges(Value, Counter, RQS),
     {noreply, State#state{counter = Counter + 1, rra_queues = NewRQS}};
 handle_info({tick, _Step}, State = #state{type = counter, value = Value, rra_queues = RQS,
-    counter = Counter, retentions = Rets}) ->
+    counter = Counter}) ->
     _Tref = schedule_tick(RQS),
     NewRQS = insert_into_counters(Value, Counter, RQS),
     {noreply, State#state{counter = Counter + 1, value = 0, rra_queues = NewRQS}};
