@@ -35,7 +35,7 @@ http_handle(Req, State) ->
     Callback = pval(<<"callback">>, Req), % json-p callback
 
     {Status, RawReply} = reply(Key, Method, Req),
-    Reply = jsonp(Callback, jsx:to_json(RawReply)),
+    Reply = jsonp(Callback, to_json(RawReply)),
 
     {ok, Req2} = cowboy_http_req:reply(Status, ReplyHeader, Reply, Req),
     {ok, Req2, State}.
@@ -118,6 +118,11 @@ handle_range(String) when is_binary(String) ->
     Period = list_to_atom(binary_to_list(Period_)),
     Reply = to_range(Size, Period),
     Reply.
+
+to_json(ok) ->
+    <<"[]">>;
+to_json(Term) ->
+    jsx:to_json(Term).
 
 to_int(Bin) when is_binary(Bin) ->
     list_to_integer(binary_to_list(Bin)).
