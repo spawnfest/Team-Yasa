@@ -6,6 +6,8 @@
 -export([websocket_init/3, websocket_handle/3,
     websocket_info/3, websocket_terminate/3]).
 
+-define(l2b(X), list_to_binary(X)).
+
 init({tcp,http}, Req, _Opts) -> 
     {IsWebSocket,_} = cowboy_http_req:header('Upgrade',Req,false),
     case IsWebSocket of
@@ -15,51 +17,43 @@ init({tcp,http}, Req, _Opts) ->
             {ok, Req, undefined_state}
     end.
 
+handle(Req, State) ->
+    http_handle(Req, State).
+
 websocket_init(_TransportName, Req, _Opts) ->
     {ok, Req, undefined_state}.
 
-handle(Req, State) ->
-    {Action, _} = cowboy_http_req:binding(action, Req),
-    {Key, _} = cowboy_http_req:qs_val(<<"key">>, Req),
- 
-    RawReply = case Action of 
-        <<"get">> ->
-            {Range, _} = cowboy_http_req:qs_val(<<"range">>, Req),
-            [Start, End] = binary:split(Range, <<",">> ), 
-            yasa:get(Key, Start, End);
-        <<"set">> ->
-            {TS, _} = cowboy_http_req:qs_val(<<"timestamp">>, Req),
-            {Value, _} = cowboy_http_req:qs_val(<<"value">>, Req),
-            yasa:set(Key, Value, TS);
-        <<"incr">> ->
-            {TS, _} = cowboy_http_req:qs_val(<<"timestamp">>, Req),
-            {Value, _} = cowboy_http_req:qs_val(<<"value">>, Req),
-            yasa:incr(Key, Value, TS)
-    end,
-    Reply = process_raw_reply(RawReply),
-    {ok, Req2} = cowboy_http_req:reply(200, [], Reply, Req),
+%
+% HTTP Handler
+%
+
+http_handle(Req, State) ->
+    ReplyHeader = [{'Content-Type', "application/json; charset=utf-8"}],
+
+    {Method, _} = cowboy_http_req:binding(action, Req),
+    Key = pval(<<"key">>, Req),
+    Callback = pval(<<"callback">>, Req), % json-p callback
+
+    {Status, RawReply} = reply(Key, Method, Req),
+    Reply = jsonp(Callback, jsx:to_json(RawReply)),
+
+    {ok, Req2} = cowboy_http_req:reply(Status, ReplyHeader, Reply, Req),
     {ok, Req2, State}.
 
+%
+% Websocket Handler
+%
+
 websocket_handle({text, Json}, Req, State) ->
-    Op = jsx:to_term(Json),
-    Method = proplists:get_value(<<"method">>, Op), 
-    Key = proplists:get_value(<<"key">>, Op), 
-    RawReply = case Method of 
-        <<"get">> ->
-            Range = proplists:get_value(<<"range">>, Op),
-            [Start, End] = binary:split(Range, <<",">> ), 
-            yasa:get(Key, Start, End);
-        <<"set">> ->
-            TS = proplists:get_value(<<"timestamp">>, Op),
-            Value = proplists:get_value(<<"value">>, Op),
-            yasa:set(Key, Value, TS);
-        <<"incr">> ->
-            TS = proplists:get_value(<<"timestamp">>, Op),
-            Value = proplists:get_value(<<"value">>, Op),
-            yasa:incr(Key, Value, TS)
-    end,
-    Reply = process_raw_reply(RawReply),
+    Proplist = jsx:to_term(Json),
+    Method = proplists:get_value(<<"method">>, Proplist), 
+    Key = pval(<<"key">>, Proplist), 
+
+    RawReply = reply(Key, Method, Proplist),
+    Reply = jsx:to_json(RawReply),
+
     {reply, {text, Reply}, Req, State};
+
 websocket_handle(_Data, Req, State) ->
     {ok, Req, State}.
 
@@ -70,9 +64,54 @@ websocket_terminate(_Reason, _Req, _State) ->
     ok.
 terminate(_Req, _State) ->
     ok.
-%%%%%%%%%%%%%%%%%%%%
-% Internal Functions
-%%%%%%%%%%%%%%%%%%%%
 
-process_raw_reply(ok) -> <<"ok">>;
-process_raw_reply(Values) when is_list(Values) -> jsx:to_json(Values).
+% ============================================================================
+% Internal Functions
+% ============================================================================
+
+jsonp(undefined, Reply) -> Reply;
+jsonp(Callback, Reply) ->
+    [Callback, <<"(">>, Reply, <<");">>].
+
+reply(Key, <<"get">>, Proplist) ->
+    Range = pval(<<"range">>, Proplist),
+    [Start, End] = binary:split(Range, <<",">>), 
+
+    case yasa:get(Key, Start, End) of
+        {error, Reason} ->
+            {500, [{<<"error">>, ?l2b(Reason)}]};
+        Values ->
+            {200, Values}
+    end;
+
+reply(Key, <<"set">>, Proplist) ->
+    Timestamp = pval(<<"timestamp">>, Proplist),
+    Value = pval(<<"value">>, Proplist),
+
+    case yasa:set(Key, Value, Timestamp) of
+        {error, Reason} ->
+            {500, [{<<"error">>, ?l2b(Reason)}]};
+        Reply ->
+            {200, Reply}
+    end;
+
+reply(Key, <<"incr">>, Proplist) ->
+    Timestamp = pval(<<"timestamp">>, Proplist),
+    Value = pval(<<"value">>, Proplist),
+
+    case yasa:incr(Key, Value, Timestamp) of
+        {error, Reason} ->
+            {500, [{<<"error">>, ?l2b(Reason)}]};
+        Reply ->
+            {200, Reply}
+    end;
+
+reply(_, _, _) ->
+    {500, [{<<"error">>, <<"invalid request">>}]}.
+
+pval(X, Req) when element(1, Req) == http_req ->
+    {Val, _} = cowboy_http_req:qs_val(X, Req),
+    Val;
+
+pval(X, PL) ->
+    proplists:get_value(X, PL).
