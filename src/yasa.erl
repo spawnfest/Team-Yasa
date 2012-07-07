@@ -12,18 +12,18 @@ incr(Key, Timestamp, Value) ->
     send(incr, Key, Timestamp, Value).
 
 get(Key, Start, End) ->
-    ok.
+    send(get, Key, Start, End).
 
 %%===================================================================
 %% Internal
 %%===================================================================
 
-send(Type, Key, Timestamp, Value) ->
+send(Type, Key, Arg1, Arg2) ->
     case lookup(Key, Type) of
         {error, Reason} ->
             {error, Reason};
         {ok, Pid} ->
-            gen_server:call(Pid, {Type, Timestamp, Value})
+            gen_server:call(Pid, {Type, Arg1, Arg2})
     end.
 
 lookup(Key, Type) ->
