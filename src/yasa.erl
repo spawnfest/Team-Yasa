@@ -4,19 +4,56 @@
 %%===================================================================
 %% Public API
 %%===================================================================
+-spec start() -> 'ok' | {'error',_}.
 start() ->
     application:start(cowboy),
     application:start(yasa).
 
+%%%----------------------------------
+%%% @doc
+%%% Sets the value of the gauge with the given key by value
+%%% @end
+%%%----------------------------------
+-spec set(binary(), integer()) -> ok.
 set(Key, Value) ->
     send(set, Key, Value).
 
-incr(Key, Value) ->
-    send(incr, Key, Value).
+%%%----------------------------------
+%%% @doc
+%%% Increments the value of the counter with the given key by incr
+%%% @end
+%%%----------------------------------
+-spec incr(binary(), integer()) -> ok.
+incr(Key, Incr) ->
+    send(incr, Key, Incr).
 
+%%%----------------------------------
+%%% @doc
+%%% Returns the values for the given key between 
+%%% Start and End timestamps
+%%% @end
+%%%----------------------------------
+-spec get(binary(), integer(), integer()) -> list().
 get(Key, Start, End) ->
     send(get, Key, Start, End).
 
+
+%%%----------------------------------
+%%% @doc
+%%% Returns the structure of the storage dir
+%%% and keys contained
+%%% ex return : 
+%%% [{<<"storage"}>>, [
+%%%     {<<"stats">>, [
+%%%         {<<"server_1">>, [<<"atom">>,<<"atom_used">>, ...]},
+%%%         {<<"server_2">>, [<<"atom">>,<<"atom_used">>, ...]},
+%%%         ...
+%%%     ]},
+%%%     {<<"someother_dir">> [...]}
+%%% ]}]
+%%% @end
+%%%----------------------------------
+-spec keys() -> list().
 keys() ->
     yasa_rra_file:get_keys().
 

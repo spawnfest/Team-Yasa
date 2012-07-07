@@ -11,6 +11,7 @@
 %%% Read retention table from the given path
 %%% @end
 %%%----------------------------------
+-spec load_from_file([atom() | [any()] | char()]) -> any().
 load_from_file(Path) when is_list(Path) ->
 	ok = filelib:ensure_dir(Path), 
     case file:read_file(Path) of
@@ -24,6 +25,7 @@ load_from_file(Path) when is_list(Path) ->
 %%% Dump retention table to given path
 %%% @end
 %%%----------------------------------
+-spec save_to_file(atom() | binary() | [atom() | [any()] | char()],{_,_,_}) -> 'ok' | {'error',atom()}.
 save_to_file(Path, {Type, Retentions, RQS}) ->
     file:write_file(Path, term_to_binary({Type, Retentions, RQS})).
 
@@ -32,13 +34,17 @@ save_to_file(Path, {Type, Retentions, RQS}) ->
 %%% List all the keys stored in storage dir
 %%% @end
 %%%----------------------------------
+
+-spec get_keys() -> list().
 get_keys() ->
 	Root = [yasa_app:priv_dir(), "storage/*"],
-	walk_directory_tree(Root).
+	[walk_directory_tree(Root)].
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+%% @private walk the directory at the given root 
+%% in a head recursive
 walk_directory_tree(Root) ->
 	SubTree = lists:map(fun(Elem) ->
 		case filelib:is_dir(Elem) of
@@ -49,6 +55,8 @@ walk_directory_tree(Root) ->
 	Name = get_name_from_path(Root),
 	{Name, SubTree}.
 
+
+%% @private get the name of the folder or file from path
 get_name_from_path(Path) when is_list(Path)->
 	FlatPath = lists:flatten(Path), 
 	{match, [Name]} = re:run(FlatPath, <<"(/\\w+)*/(?<NAME>\\w+)(/\\*)?">>,
