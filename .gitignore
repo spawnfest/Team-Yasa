@@ -1,0 +1,3 @@
+*.yasa
+erl_crash.dump
+*.beam
