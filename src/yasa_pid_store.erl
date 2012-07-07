@@ -28,10 +28,20 @@
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
+%%%----------------------------------
+%%% @doc
+%%% look up the pid of given key
+%%% @end
+%%%----------------------------------
 -spec lookup(term()) -> {ok, pid()}|{error, not_found}.
 lookup(Key) ->
     gen_server:call(?SERVER, {lookup, Key}).
 
+%%%----------------------------------
+%%% @doc
+%%% register the the given pid with the given term
+%%% @end
+%%%----------------------------------
 -spec insert(term(), pid()) -> ok.
 insert(Key, Pid) ->
     gen_server:call(?SERVER, {insert, {Key, Pid}}).

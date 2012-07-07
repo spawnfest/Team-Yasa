@@ -1,3 +1,9 @@
+%%%-------------------------------------------------------------------
+%%% @doc
+%%% A simple handler to serve main page
+%%% @end
+%%%-------------------------------------------------------------------
+
 -module(yasa_static_handler).
 
 -export([init/3, handle/2, terminate/2]).
@@ -6,7 +12,7 @@ init({tcp,http}, Req, _Opts) ->
 	{ok, Req, undefined_state}.
 
 handle(Req, State) ->
-	Path = [yasa_app:priv_dir(), "/www/demo.html"],
+	Path = [yasa_app:priv_dir(), "/www/index.html"],
 	{ok, Reply} = file:read_file(Path),
 	ReplyHeader =  [{'Content-Type', "text/html; charset=utf-8"}],
 	{ok, Req2} = cowboy_http_req:reply(200, ReplyHeader, Reply, Req),

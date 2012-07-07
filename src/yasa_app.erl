@@ -9,14 +9,23 @@
 %% Application callbacks
 %% ===================================================================
 
+-spec start(_,_) ->  {'error',_} | {'ok',pid()}.
 start(_StartType, _StartArgs) ->
 	ok = start_web_server(),
+	% don't start with out properly defined retentions
 	ok = check_retentions(),
     yasa_sup:start_link().
 
+-spec stop(_) -> 'ok'.
 stop(_State) ->
     ok.
 
+%%%----------------------------------
+%%% @doc
+%%% returns the priv dir for yasa application
+%%% @end
+%%%----------------------------------
+-spec priv_dir() -> nonempty_string().
 priv_dir() ->
     case code:priv_dir(yasa) of
         {error, bad_name} ->
@@ -29,6 +38,9 @@ priv_dir() ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+%% @private start the web server(cowboy) on the specified port of 8080
+%% by default
 start_web_server() ->
 	Port = case application:get_env(yasa, port) of 
         {ok, P} -> P;
@@ -48,6 +60,8 @@ start_web_server() ->
 	),
 	ok.
 
+%% @private check if the retentions are define in config file and make
+%% sure the are not relatively primary
 check_retentions() ->
     case application:get_env(yasa, retentions) of 
         undefined -> throw("Please define retentions");
