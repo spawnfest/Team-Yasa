@@ -76,7 +76,7 @@ reply(Key, <<"get">>, Proplist) ->
         {error, Reason} ->
             {500, [{<<"error">>, ?l2b(Reason)}]};
         Values ->
-            {200, Values}
+            {200, lists:map(fun({T, V}) -> [T,V] end, Values)}
     end;
 
 reply(Key, <<"set">>, Proplist) ->
