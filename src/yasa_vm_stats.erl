@@ -1,5 +1,7 @@
 %%%-------------------------------------------------------------------
 %%% @doc
+%%% Periodically dumps Erlang VM statistics. This is used for demo
+%%% purposes
 %%% @end
 %%%-------------------------------------------------------------------
 -module(yasa_vm_stats).
@@ -17,7 +19,8 @@
          code_change/3]).
 
 -record(state, {}).
--define(REPORT_TIME, 500).
+-define(REPORT_TIME, 10000).
+-define(PVAL(X, PL), proplists:get_value(X, PL)).
 
 %%%===================================================================
 %%% API
@@ -40,9 +43,21 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
-handle_info(_Info, State) ->
+handle_info(report, State) ->
     schedule_report(?REPORT_TIME),
-    io:format("Got info ~p~n", [_Info]),
+
+    MemoryUsage = erlang:memory(),
+
+    yasa:set(<<"stats.total">>, ?PVAL(total, MemoryUsage)),
+    yasa:set(<<"stats.memory_usage">>, ?PVAL(processes, MemoryUsage)),
+    yasa:set(<<"stats.processes_used">>, ?PVAL(processes_used, MemoryUsage)),
+    yasa:set(<<"stats.memory_usage">>, ?PVAL(system, MemoryUsage)),
+    yasa:set(<<"stats.atom">>, ?PVAL(atom, MemoryUsage)),
+    yasa:set(<<"stats.memory_usage">>, ?PVAL(atom_used, MemoryUsage)),
+    yasa:set(<<"stats.binary">>, ?PVAL(binary, MemoryUsage)),
+    yasa:set(<<"stats.code">>, ?PVAL(code, MemoryUsage)),
+    yasa:set(<<"stats.ets">>, ?PVAL(ets, MemoryUsage)),
+
     {noreply, State}.
 
 terminate(_Reason, _State) ->
