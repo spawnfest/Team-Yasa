@@ -72,12 +72,12 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 handle_info({tick, _Step}, State = #state{type = gauge, value = Value, rra_queues = RQS,
-    counter = Counter, retentions = Rets, path = Path}) ->
+    counter = Counter, retentions = Rets}) ->
     _Tref = schedule_tick(RQS),
     NewRQS = insert_into_gauges(Value, Counter, RQS),
     {noreply, State#state{counter = Counter + 1, rra_queues = NewRQS}};
 handle_info({tick, _Step}, State = #state{type = counter, value = Value, rra_queues = RQS,
-    counter = Counter, retentions = Rets,path = Path}) ->
+    counter = Counter, retentions = Rets}) ->
     _Tref = schedule_tick(RQS),
     NewRQS = insert_into_counters(Value, Counter, RQS),
     {noreply, State#state{counter = Counter + 1, value = 0, rra_queues = NewRQS}};
@@ -124,15 +124,7 @@ zip_rra_queues(Retentions) ->
     Combine = fun(Ratio, {Step, Size}) ->
         yasa_rra_queue:new(Ratio, Step, Size)
     end,
-    RRAQueues = lists:zipwith(Combine, Ratios, Retentions),
-    set_previous_queues(RRAQueues, [], undefined).
-
-set_previous_queues([Head | Tail], Acc, Previous) ->
-    NewRRAQueue = Head#rra_queue{previous_queue = Previous},
-    NewPrevious = Head#rra_queue.queue,
-    set_previous_queues(Tail, [NewRRAQueue | Acc], NewPrevious);
-set_previous_queues([], Acc, _) ->
-    lists:reverse(Acc).
+    lists:zipwith(Combine, Ratios, Retentions).
 
 schedule_tick([Head | _Tail]) ->
     Step = Head#rra_queue.step,
@@ -152,13 +144,18 @@ insert_into_gauges(Value, Counter, RQS) ->
     lists:map(Mapper, RQS).
 
 insert_into_counters(Value, Counter, RQS) ->
-    Mapper = fun(RQ = #rra_queue{ratio = Ratio}) ->
+    Accumulate = fun(RQ = #rra_queue{ratio = Ratio}, Acc) ->
         case Counter rem Ratio of
-            0 -> yasa_rra_queue:push_counter(Value, RQ);
-            _ -> RQ
+            0 ->
+                Prev = case Acc of
+                    [] -> undefined;
+                    _ -> hd(Acc)
+                end, 
+                [yasa_rra_queue:push_counter(Value, RQ, Prev) | Acc];
+            _ -> [RQ | Acc]
         end
     end,
-    lists:map(Mapper, RQS).
+    lists:reverse(lists:foldl(Accumulate, [], RQS)).
 
 select_queue(Start, RQS) ->
     select_queue(Start, RQS, hd(RQS)).
