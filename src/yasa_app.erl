@@ -36,7 +36,10 @@ start_web_server() ->
     end,
 	Dispatch = [
 	    %% {Host, list({Path, Handler, Opts})}
-	    {'_', [{[<<"api">>, action], yasa_web_handler, []}]}
+	    {'_', [
+	    	{[<<"api">>, action], yasa_web_handler, []},
+	    	{[], yasa_basic_handler, []}
+		]}
 	],
 	%% Name, NbAcceptors, Transport, TransOpts, Protocol, ProtoOpts
 	cowboy:start_listener(my_http_listener, 16,
