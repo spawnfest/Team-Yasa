@@ -1,6 +1,4 @@
-
 -module(yasa_sup).
-
 -behaviour(supervisor).
 
 %% API
@@ -9,7 +7,6 @@
 %% Supervisor callbacks
 -export([init/1]).
 
-%% Helper macro for declaring children of supervisor
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 
 %% ===================================================================
@@ -24,5 +21,9 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, []} }.
-
+    RestartStrategy = {one_for_one, 5, 10},
+    Children = [
+        ?CHILD(yasa_rra_sup, supervisor),
+        ?CHILD(yasa_pid_store, worker)
+    ],
+    {ok, {RestartStrategy, Children}}.
