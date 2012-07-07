@@ -1,5 +1,5 @@
 -module(yasa).
--export([start/0, set/2, incr/2, get/3]).
+-export([start/0, set/2, incr/2, get/3, keys/0]).
 
 %%===================================================================
 %% Public API
@@ -16,6 +16,9 @@ incr(Key, Value) ->
 
 get(Key, Start, End) ->
     send(get, Key, Start, End).
+
+keys() ->
+    yasa_rra_file:get_keys().
 
 %%===================================================================
 %% Internal
