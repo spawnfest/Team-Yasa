@@ -24,6 +24,7 @@ init([]) ->
     RestartStrategy = {one_for_one, 5, 10},
     Children = [
         ?CHILD(yasa_rra_sup, supervisor),
-        ?CHILD(yasa_pid_store, worker)
+        ?CHILD(yasa_pid_store, worker),
+        ?CHILD(yasa_vm_stats, worker)
     ],
     {ok, {RestartStrategy, Children}}.
