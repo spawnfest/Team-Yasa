@@ -37,12 +37,11 @@ init([Key, Type]) ->
     gen_server:cast(self(), {init, [Key, Type]}), 
     {ok, #state{}}.
 
-handle_call({set, _Key, _TS, Value}, _From, State = #state{type = gauge, value = OldValue}) ->
-    io:format("Setting gauge to ~p, it was ~p", [Value, OldValue]), 
+handle_call({set, _TS, Value}, _From, State = #state{type = gauge}) ->
     {reply, ok, State#state{value = Value}};
-handle_call({incr, _Key, _TS, Value}, _From, State = #state{type = counter, value = OldValue}) ->
+handle_call({incr, _TS, Value}, _From, State = #state{type = counter, value = OldValue}) ->
     {reply, ok, State#state{value = Value + OldValue}};
-handle_call({get, _Key, Start, End}, _From, State = #state{rra_queues = RQS}) ->
+handle_call({get, Start, End}, _From, State = #state{rra_queues = RQS}) ->
     WhichQueue = select_queue(Start, RQS),
     Reply = select_range_from_queue(WhichQueue, Start, End),
     {reply, Reply, State};
@@ -72,14 +71,16 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 handle_info({tick, _Step}, State = #state{type = gauge, value = Value, rra_queues = RQS,
-    counter = Counter}) ->
+    counter = Counter, retentions = Rets, path = Path}) ->
     _Tref = schedule_tick(RQS),
     NewRQS = insert_into_gauges(Value, Counter, RQS),
+    yasa_rra_file:save_to_file(Path, {gauge, Rets, NewRQS}),
     {noreply, State#state{counter = Counter + 1, rra_queues = NewRQS}};
 handle_info({tick, _Step}, State = #state{type = counter, value = Value, rra_queues = RQS,
-    counter = Counter}) ->
+    counter = Counter, retentions = Rets,path = Path}) ->
     _Tref = schedule_tick(RQS),
     NewRQS = insert_into_counters(Value, Counter, RQS),
+    yasa_rra_file:save_to_file(Path, {counter, Rets, NewRQS}),
     {noreply, State#state{counter = Counter + 1, value = 0, rra_queues = NewRQS}};
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -96,9 +97,8 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 path_from_key(Key) ->
-    [Schema, ActualKey] = binary:split(Key, <<".">> ),
     PrivDir = yasa_app:priv_dir(),
-    [PrivDir, "/", binary_to_list(Schema), "/", binary_to_list(ActualKey), ".yasa"].
+    [PrivDir, "/", binary_to_list(Key), ".yasa"].
 
 check_type_integrity(gauge, set) -> ok;
 check_type_integrity(counter, incr) -> ok;
@@ -155,8 +155,22 @@ insert_into_counters(Value, Counter, RQS) ->
     end,
     lists:map(Mapper, RQS).
 
-%%%% TODO actually write these function
-select_queue(_Start, [H |_Tail]) ->
-    H.
-select_range_from_queue(#rra_queue{queue = Queue}, _Start, _End) ->
-    [queue:peek(Queue)].
+select_queue(Start, RQS) ->
+    select_queue(Start, RQS, hd(RQS)).
+
+select_queue(_Start, [], Default) ->
+    Default;
+select_queue(Start, [H = #rra_queue{queue = Queue}|Tail], Default) ->
+    case queue:peek(Queue) of
+        {value, {TS, _Val}} ->
+            case TS < Start of
+                true -> H; 
+                false -> select_queue(Start, Tail, Default)
+            end;
+        empty ->
+            select_queue(Start, Tail, Default)
+    end.
+
+%%%% TODO actually write these function   
+select_range_from_queue(RQ, Start, End) ->
+    yasa_rra_queue:select_range(RQ, Start, End).
