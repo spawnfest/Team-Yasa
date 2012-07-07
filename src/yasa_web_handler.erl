@@ -82,7 +82,7 @@ reply(Key, <<"get">>, Proplist) ->
 reply(Key, <<"set">>, Proplist) ->
     Value = pval(<<"value">>, Proplist),
 
-    case yasa:set(Key, Value) of
+    case yasa:set(Key, to_int(Value)) of
         {error, Reason} ->
             {500, [{<<"error">>, ?l2b(Reason)}]};
         Reply ->
@@ -92,7 +92,7 @@ reply(Key, <<"set">>, Proplist) ->
 reply(Key, <<"incr">>, Proplist) ->
     Value = pval(<<"value">>, Proplist),
 
-    case yasa:incr(Key, Value) of
+    case yasa:incr(Key, to_int(Value)) of
         {error, Reason} ->
             {500, [{<<"error">>, ?l2b(Reason)}]};
         Reply ->
@@ -120,6 +120,9 @@ handle_range(String) when is_binary(String) ->
     Reply = to_range(Size, Period),
     Reply.
 
+to_int(Bin) when is_binary(Bin) ->
+    list_to_integer(binary_to_list(Bin)).
+
 to_range(N, Period) ->
     [timestamp() - seconds_in(N, Period), timestamp()].
 
@@ -137,7 +140,6 @@ parse_matches(_, [], Acc) ->
 parse_matches(String, [{Start, End} | Rest], Acc) ->
     <<_:Start/binary, Match:End/binary, _/binary>> = String,
     parse_matches(String, Rest, Acc ++ [Match]).
-
 
 pval(X, Req) when element(1, Req) == http_req ->
     {Val, _} = cowboy_http_req:qs_val(X, Req),
