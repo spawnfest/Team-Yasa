@@ -57,7 +57,7 @@ walk_directory_tree(Root) ->
         end
     end, filelib:wildcard(Root)),
     Name = get_name_from_path(Root),
-    [{label, Name}, {items, SubTree}].
+    [{label, Name}, {expanded, true}, {items, SubTree}].
 
 get_name_from_path(Path) when is_list(Path)->
 	FlatPath = lists:flatten(Path), 
