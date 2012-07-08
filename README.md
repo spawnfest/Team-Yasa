@@ -9,21 +9,8 @@ Each RRD can be queried via Yasa's WebSocket or HTTP API allowing clients to ste
 
 Currently Yasa only supports two data types for logging data. Gauges and Counters. Gauges are used for
 storing things like temperature, memory, eg. a value at a specific point in time. Counters are used for
-calculating things like bandwidth, requests/second ie. some kind of rate. (see API)
-
-Configuration
-=============
-
-Since RRD files are fixed in sized you must define how much historical data you want to keep lying around.
-Yasa will default to 60 samples of 1 second data and 1000 samples of 1 minute data. You can define as
-many retentions as you like. For example, in your app.config:
-
-	[
-		{yasa,[
-      {port, 8080}
-			{retentions, [{1,60},{60,1000}]}
-		]}
-	].
+storing rates ie. bandwidth, requests/second, etc. Below there are some API examples showing how to use
+Gauges and Counters with Yasa.
 
 API Examples
 ============
@@ -33,24 +20,23 @@ HTTP API
 
 To set a gauge:
 
-	/api/set?key="keyname"&value=<integer_value>
+	/api/set?key=key.name&value=<integer_value>
 
 To increment a counter:
 
-	/api/incr?key="keyname"&value=<integer_value>
+	/api/incr?key=key.name&value=<integer_value>
 
-To get for a key:
+Get time series data for a given key:
 
-	/api/get?key="keyname"&range=-<integer_value><hour|min|sec|day|month|year>
+	/api/get?key=key.name&range=-<integer_value><hour|min|sec|day|month|year>
 
 
 WebSocket API
 -------------
 
-Connect to websocket on /wsapi then;
+You can connect to Yasa via a Websocket by opening up `/wsapi`
 
-To register to the feed of a key. Returns data for the given range up on registration and
-server keeps sending new data periodically.
+The Websocket API allows you to register and listen for multiple keys.
 
 	{method: "register", key: "keyname", range: "-<integer_value><hour|min|sec|day|month|year>"}
 
@@ -66,12 +52,23 @@ To set a gauge:
 
 	{method: "set", key: "keyname", value: <integer_value> }
 
-Possible Responses:
-	1) error: invalid request
-		if the request is invalid like registering to a non existing key.
-	2) ok
-		upon set/incr/unregister operations
-	3) pong
-		upon ping
-	4) [{"key":"keyname", "values":[[timestamp, value], [timestamp, value], ...]}, ...]
-		on register and periodic updates
+Configuration
+=============
+
+Since RRD files are fixed in sized you must define how much historical data you want to keep lying around.
+Yasa will default to 60 samples of 1 second data and 1000 samples of 1 minute data. You can define as
+many retentions as you like. For example, in your app.config:
+
+	[
+		{yasa,[
+      {port, 8080}
+			{retentions, [{1,60},{60,1000}]}
+		]}
+	].
+
+Final Notes
+===========
+
+This project is far from finished. There's still plenty of bugs to fix and tests to write
+if you a take a peek at our code. Were open to any suggestions you many have about future
+work on this project. Maybe its a lost cause, maybe its not :) Please let us know!
