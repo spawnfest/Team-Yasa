@@ -50,7 +50,8 @@ start_web_server() ->
 	    %% {Host, list({Path, Handler, Opts})}
 	    {'_', [
 	    	{[<<"api">>, action], yasa_api_handler, []},
-	    	{[], yasa_static_handler, []}
+	    	{[], yasa_static_handler, []},
+            {[<<"assets">>, '_'], yasa_static_handler, []}
 		]}
 	],
 	%% Name, NbAcceptors, Transport, TransOpts, Protocol, ProtoOpts
