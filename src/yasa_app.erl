@@ -54,7 +54,8 @@ start_web_server() ->
     			[{directory, {priv_dir, yasa, [<<"www/assets">>]}},
     			{mimetypes, [
           			{<<".css">>, [<<"text/css">>]},
-          			{<<".js">>, [<<"application/javascript">>]}]}]},
+          			{<<".js">>, [<<"application/javascript">>]},
+          			{<<".png">>, [<<"image/png">>]}]}]},
 	    	{[], yasa_default_handler, []}
 		]}
 	],
