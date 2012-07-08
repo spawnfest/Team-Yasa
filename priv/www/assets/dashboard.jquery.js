@@ -20,7 +20,7 @@
         },
 
         graph : function(key, range) {
-            clearTimeout(this.timer);
+            clearTimeout($.dashboard.timer);
             range = "-30sec";
 
             var options = {
@@ -48,11 +48,10 @@
                 $.dashboard.chart = new Highcharts.Chart(options);
             });
 
-            setInterval("$.dashboard.update()", 1000);
+            $.dashboard.timer = setInterval("$.dashboard.update()", 1000);
         },
 
         update : function() {
-            console.log("update!");
             $.getJSON("/api/get?range=-1sec&key="+$.dashboard.key, function(data) {
                 data = $.map(data, function(arr) { return [[arr[0] * 1000, arr[1]]] });
                 shift = $.dashboard.chart.series[0].data.length >= 30;
