@@ -85,8 +85,8 @@ reply(Key, <<"set">>, Proplist) ->
     case yasa:set(Key, to_int(Value)) of
         {error, Reason} ->
             {500, [{<<"error">>, ?l2b(Reason)}]};
-        Reply ->
-            {200, Reply}
+        _ ->
+            {200, <<"">>}
     end;
 
 reply(Key, <<"incr">>, Proplist) ->
@@ -95,9 +95,12 @@ reply(Key, <<"incr">>, Proplist) ->
     case yasa:incr(Key, to_int(Value)) of
         {error, Reason} ->
             {500, [{<<"error">>, ?l2b(Reason)}]};
-        Reply ->
-            {200, Reply}
+        _ ->
+            {200, <<"">>}
     end;
+
+reply(undefined, <<"keys">>, _) ->
+    {200, yasa:keys()};
 
 reply(_, _, _) ->
     {500, [{<<"error">>, <<"invalid request">>}]}.
