@@ -20,6 +20,7 @@ create_rra_queues() ->
     [yasa_rra_queue:new(1, 1, 3), yasa_rra_queue:new(3, 3, 3)].
 
 create_long_rra_queue() ->
+    ?debugMsg("Generating RRA Queue..."),
 	lists:foldl(fun(Elem, Acc) -> 
 			timer:sleep(1000),
 			yasa_rra_queue:push_gauge(Elem, Acc) 

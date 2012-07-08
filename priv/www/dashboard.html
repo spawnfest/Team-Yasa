@@ -27,17 +27,15 @@
         <div class="container">
             <div class="row">
                 <div class="span4">
-                    <div class="well" id="keys">
-                        
-                    </div>
+                    <div id="tree"></div>
                 </div>
                 <div class="span8">
-                    <ul class="nav nav-pills">
-                        <li><a href="#">One Week</a></li>
-                        <li><a href="#">One Day</a></li>
-                        <li><a href="#">Last Hour</a></li>
-                        <li><a href="#">Last 10 Minutes</a></li>
-                        <li class="active"><a href="#">Last Minute</a></li>
+                    <ul id="timeframe" style="display: none" class="nav nav-pills">
+                        <li data-query="-1week"><a href="#">-1 Week</a></li>
+                        <li data-query="-1day"><a href="#">-1 Day</a></li>
+                        <li data-query="-1hour"><a href="#">-1 Hour</a></li>
+                        <li data-query="-10min"><a href="#">-10 Minutes</a></li>
+                        <li data-query="-1min" class="active"><a href="#">Last Minute</a></li>
                     </ul>
 
                     <div id="graph" style="width: 100%; height: 400px; margin: 0 auto"></div>
