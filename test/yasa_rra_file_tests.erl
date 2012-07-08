@@ -9,7 +9,6 @@ rra_file_test_() ->
             fun save_load/0,
             fun load_errors/0
             ]}.
-
         
 %%%===================================================================
 %%% Setup / Teardown

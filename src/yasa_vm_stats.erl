@@ -34,7 +34,7 @@ start_link() ->
 %%%===================================================================
 
 init([]) ->
-    schedule_report(?REPORT_TIME),
+    self() ! report,
     {ok, #state{}}.
 
 handle_call(_Request, _From, State) ->
