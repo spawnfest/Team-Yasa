@@ -12,6 +12,16 @@ storing things like temperature, memory, eg. a value at a specific point in time
 storing rates ie. bandwidth, requests/second, etc. Below there are some API examples showing how to use
 Gauges and Counters with Yasa.
 
+
+QUICK START
+-----------
+
+Have a recent version of erlang installed on your system,
+	
+	git clone https://github.com/Spawnfest2012/Team-Yasa.git; make; start.sh
+
+Then goto http://localhost:8080 for regular client or http://localhost:8080/ws for websocket client. You can see the vmstats of the node yu just start and and new gauges/counters by following the api.
+
 API Examples
 ============
 
