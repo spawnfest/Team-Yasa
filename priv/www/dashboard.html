@@ -5,8 +5,14 @@
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
         <script src="http://code.highcharts.com/highcharts.js"></script>
         <script src="/assets/dashboard.jquery.js"></script>
+        <script src="/assets/jqwidgets/jqxcore.js"></script>
+        <script src="/assets/jqwidgets/jqxbuttons.js"></script>
+        <script src="/assets/jqwidgets/jqxscrollbar.js"></script>
+        <script src="/assets/jqwidgets/jqxpanel.js"></script>
+        <script src="/assets/jqwidgets/jqxtree.js"></script>
         <script src="http://current.bootstrapcdn.com/bootstrap-v204/js/bootstrap.min.js"></script>
         <link href="http://current.bootstrapcdn.com/bootstrap-v204/css/bootstrap-combined.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="/assets/jqwidgets/jqx.base.css" type="text/css" />
     </head>
     <body onload="$.dashboard.init()" style="padding-top: 80px;">
 
@@ -21,9 +27,8 @@
         <div class="container">
             <div class="row">
                 <div class="span4">
-                    <div class="well">
-                        <ul id="keys" class="nav nav-tabs nav-stacked">
-                        </ul>
+                    <div class="well" id="keys">
+                        
                     </div>
                 </div>
                 <div class="span8">

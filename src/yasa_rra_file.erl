@@ -38,7 +38,7 @@ save_to_file(Path, {Type, Retentions, RQS}) ->
 -spec get_keys() -> list().
 get_keys() ->
 	Root = [yasa_app:priv_dir(), "storage/*"],
-    lists:flatten(walk_directory_tree(Root)).
+    [walk_directory_tree(Root)].
 
 %%%===================================================================
 %%% Internal functions
@@ -48,13 +48,24 @@ walk_directory_tree(Root) ->
     SubTree = lists:map(fun(Elem) ->
         case filelib:is_dir(Elem) of
             true -> walk_directory_tree([Elem, "/*"]);
-            false -> get_name_from_path(Elem)
+            false -> 
+            	Name = get_name_from_path(Elem),
+            	FullKeyName = get_key_name_from_path(Elem),
+            	HTML = <<"<div class='keyname' data-name='", FullKeyName/binary, "'><a href='#'>",
+            		Name/binary, "</a></div>">>,
+            	[{html, HTML}]
         end
     end, filelib:wildcard(Root)),
     Name = get_name_from_path(Root),
-    [Name, SubTree].
+    [{label, Name}, {items, SubTree}].
 
 get_name_from_path(Path) when is_list(Path)->
+	FlatPath = lists:flatten(Path), 
+	{match, [Name]} = re:run(FlatPath, <<"(/\\w+)*/(?<NAME>\\w+)(/\\*)?">>,
+		[{capture, ['NAME'], binary}]),
+	Name.
+
+get_key_name_from_path(Path) ->
     FlatPath = lists:flatten(Path), 
     case re:run(FlatPath, <<"storage\\/(?<NAME>.+)\.yasa$">>, [{capture, ['NAME'], binary}]) of
         {match, [Name]} ->
@@ -62,3 +73,5 @@ get_name_from_path(Path) when is_list(Path)->
         nomatch ->
             []
     end.
+
+
