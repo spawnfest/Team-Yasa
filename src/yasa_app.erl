@@ -49,8 +49,8 @@ start_web_server() ->
 	Dispatch = [
 	    %% {Host, list({Path, Handler, Opts})}
 	    {'_', [
-	    	{[<<"api">>, action], yasa_api_handler, []},
-	    	{[<<"wsapi">>], bullet_handler, [{handler, yasa_ws_handler}]},
+	    	{[<<"api">>, action], yasa_http_api_handler, []},
+	    	{[<<"wsapi">>], bullet_handler, [{handler, yasa_ws_api_handler}]},
 	    	{[<<"assets">>, '...'], cowboy_http_static,
     			[{directory, {priv_dir, yasa, [<<"www/assets">>]}},
     			{mimetypes, [

@@ -8,7 +8,7 @@
     };
     bullet.onmessage = function(e){
         if(e.data !== 'pong'){
-            //alert(e.data);
+            alert(e.data);
         }        
     };
     bullet.onheartbeat = function(){
