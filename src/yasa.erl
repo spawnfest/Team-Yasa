@@ -37,20 +37,10 @@ incr(Key, Incr) ->
 get(Key, Start, End) ->
     send(get, Key, Start, End).
 
-
 %%%----------------------------------
 %%% @doc
-%%% Returns the structure of the storage dir
-%%% and keys contained
-%%% ex return : 
-%%% [{<<"storage"}>>, [
-%%%     {<<"stats">>, [
-%%%         {<<"server_1">>, [<<"atom">>,<<"atom_used">>, ...]},
-%%%         {<<"server_2">>, [<<"atom">>,<<"atom_used">>, ...]},
-%%%         ...
-%%%     ]},
-%%%     {<<"someother_dir">> [...]}
-%%% ]}]
+%%% Returns all keys being stored by YASA
+%%% eg. [<<"stat.keyname">>, ...]
 %%% @end
 %%%----------------------------------
 -spec keys() -> list().

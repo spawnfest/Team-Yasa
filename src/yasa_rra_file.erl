@@ -38,27 +38,27 @@ save_to_file(Path, {Type, Retentions, RQS}) ->
 -spec get_keys() -> list().
 get_keys() ->
 	Root = [yasa_app:priv_dir(), "storage/*"],
-	[walk_directory_tree(Root)].
+    lists:flatten(walk_directory_tree(Root)).
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-%% @private walk the directory at the given root 
-%% in a head recursive
+
 walk_directory_tree(Root) ->
-	SubTree = lists:map(fun(Elem) ->
-		case filelib:is_dir(Elem) of
-			true -> walk_directory_tree([Elem, "/*"]);
-			false -> get_name_from_path(Elem)
-		end
-	end,filelib:wildcard(Root)),
-	Name = get_name_from_path(Root),
-	{Name, SubTree}.
+    SubTree = lists:map(fun(Elem) ->
+        case filelib:is_dir(Elem) of
+            true -> walk_directory_tree([Elem, "/*"]);
+            false -> get_name_from_path(Elem)
+        end
+    end, filelib:wildcard(Root)),
+    Name = get_name_from_path(Root),
+    [Name, SubTree].
 
-
-%% @private get the name of the folder or file from path
 get_name_from_path(Path) when is_list(Path)->
-	FlatPath = lists:flatten(Path), 
-	{match, [Name]} = re:run(FlatPath, <<"(/\\w+)*/(?<NAME>\\w+)(/\\*)?">>,
-		[{capture, ['NAME'], binary}]),
-	Name.
+    FlatPath = lists:flatten(Path), 
+    case re:run(FlatPath, <<"storage\\/(?<NAME>.+)\.yasa$">>, [{capture, ['NAME'], binary}]) of
+        {match, [Name]} ->
+            re:replace(Name, "\\/", ".", [global, {return, binary}]);
+        nomatch ->
+            []
+    end.
