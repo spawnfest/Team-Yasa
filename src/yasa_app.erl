@@ -57,7 +57,8 @@ start_web_server() ->
           			{<<".css">>, [<<"text/css">>]},
           			{<<".js">>, [<<"application/javascript">>]},
           			{<<".png">>, [<<"image/png">>]}]}]},
-	    	{[], yasa_default_handler, []}
+	    	{[], yasa_default_handler, []},
+	    	{[<<"ws">>], yasa_default_handler, []}
 		]}
 	],
 	%% Name, NbAcceptors, Transport, TransOpts, Protocol, ProtoOpts

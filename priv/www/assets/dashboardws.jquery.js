@@ -28,10 +28,10 @@
 
             $('#keys .keyname').click(function() {
                 if($(this).data('clicked') === true){
-                    bullet.send(JSON.stringify({type: 'unregister', key: $(this).data('name')}));
+                    bullet.send(JSON.stringify({method: 'unregister', key: $(this).data('name')}));
                     $(this).data('clicked', false); 
                 } else {
-                    bullet.send(JSON.stringify({type: 'register', key: $(this).data('name'), range: '-5min'}))
+                    bullet.send(JSON.stringify({method: 'register', key: $(this).data('name'), range: '-5min'}))
                     //$.dashboard.graph( $(this).data('name'));
                     $(this).data('clicked', true); 
                 }
