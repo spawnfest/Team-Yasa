@@ -6,6 +6,7 @@
 %%%-------------------------------------------------------------------
 -module(yasa_rra_queue).
 -include("rra_queue.hrl").
+
 -export([new/3, push_gauge/2, push_counter/3, select_range/3]).
 
 -type rra_queue() :: #rra_queue{}.
@@ -74,10 +75,7 @@ push_counter(Val, RRAQueue = #rra_queue{size = Size,
 -spec select_range(rra_queue(), integer(), integer()) -> list().
 select_range(#rra_queue{queue = Queue}, Start, End) ->
     Filter = fun({TS, _Val}) ->
-        case {Start < TS, TS < End} of
-            {true, true} -> true;
-            _ -> false
-        end
+        Start =< TS andalso TS =< End            
     end,
     queue:to_list(queue:filter(Filter, Queue)).
 %%%===================================================================
