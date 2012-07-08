@@ -16,7 +16,7 @@ stream(<<"ping">>, Req, State) ->
 	{reply, <<"pong">>, Req, State};
 stream(Data, Req, State = #state{registered = Registered}) ->
 	Json = jsx:to_term(Data),
-	Type = proplists:get_value(<<"type">>, Json),
+	Type = proplists:get_value(<<"method">>, Json),
 	Key = proplists:get_value(<<"key">>, Json),
 	case Type of 
 		<<"unregister">> ->
