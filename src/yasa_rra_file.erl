@@ -61,7 +61,7 @@ walk_directory_tree(Root) ->
 
 get_name_from_path(Path) when is_list(Path)->
 	FlatPath = lists:flatten(Path), 
-	{match, [Name]} = re:run(FlatPath, <<"(/\\w+)*/(?<NAME>\\w+)(/\\*)?">>,
+	{match, [Name]} = re:run(FlatPath, <<"(/[\\w-]+)*/(?<NAME>\\w+)(/\\*)?">>,
 		[{capture, ['NAME'], binary}]),
 	Name.
 
