@@ -1,16 +1,15 @@
 (function($) {
     $.dashboard = {
-        websocket : null,
+        timer : null,
+        data : null,
+        lastval : 0,
 
         init : function() {
-            this.setup_bindings();
-
             $.ajaxSetup({
                 async: false
             });
 
             $.getJSON("/api/keys", function(data) {
-                console.log(data);
                 $('#tree').jqxTree({ source: data, height: '600px', width: '300px' })
             });
 
@@ -20,30 +19,14 @@
             });
         },
 
-        websocket_init : function(onmsg_handler) {
-            var current_host = document.location.hostname;
-            var port = document.location.port;
-            var fulldomain = current_host + ":" + port;
-
-            if ('WebSocket' in window) {
-                this.websocket = new WebSocket('ws://'+fulldomain+'/api/get?range=-5min&key=stats.binary');
-
-                this.websocket.onopen = function() {
-                    console.log("[DEBUG] Websocket Connected");
-                }
-                this.websocket.onmessage = onmsg_handler;
-            }
-
-            return this.websocket;
-        },
-
         graph : function(key, range) {
-            range = (range ? range : "-5min");
+            clearTimeout(this.timer);
+            range = "-30sec";
 
             var options = {
                 chart: {
                     renderTo: 'graph',
-                    type: 'area'
+                    type: 'spline'
                 },
                 title: {
                     text: key
@@ -56,24 +39,25 @@
                 }
             };
 
+            $.dashboard.key = key;
+            $.dashboard.range = range;
+
             $.getJSON("/api/get?range="+range+"&key="+key, function(data) {
                 data = $.map(data, function(arr) { return [[arr[0] * 1000, arr[1]]] });
-                console.log(data);
-                
                 options.series = [{name: key, data: data}];
-                new Highcharts.Chart(options);
+                $.dashboard.chart = new Highcharts.Chart(options);
             });
+
+            setInterval("$.dashboard.update()", 1000);
         },
 
-        setup_bindings : function() {
-            $('#timeframe li').click(function() {
-                alert('works');
+        update : function() {
+            console.log("update!");
+            $.getJSON("/api/get?range=-1sec&key="+$.dashboard.key, function(data) {
+                data = $.map(data, function(arr) { return [[arr[0] * 1000, arr[1]]] });
+                shift = $.dashboard.chart.series[0].data.length >= 30;
+                $.dashboard.chart.series[0].addPoint(data[0], true, shift);
             });
-        },
-
-        handle_time_change : function(obj) {
-            console.log(obj);
         }
-
     }
 })(jQuery);
