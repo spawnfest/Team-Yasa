@@ -87,7 +87,6 @@ sum_last_x(Queue, X) ->
 sum_last_x(_Queue, 0, Sum) ->
     Sum;
 sum_last_x(Queue, X, Sum) ->
-    io:format("~p    ~p     ~p~n", [Queue, X, Sum]), 
     {{value, {_TS, Val}}, NewQueue} = queue:out_r(Queue),
     sum_last_x(NewQueue, X - 1, Sum + Val).
 
