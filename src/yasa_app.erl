@@ -50,8 +50,12 @@ start_web_server() ->
 	    %% {Host, list({Path, Handler, Opts})}
 	    {'_', [
 	    	{[<<"api">>, action], yasa_api_handler, []},
-	    	{[], yasa_static_handler, []},
-            {[<<"assets">>, '_'], yasa_static_handler, []}
+	    	{[<<"assets">>, '...'], cowboy_http_static,
+    			[{directory, {priv_dir, yasa, [<<"www/assets">>]}},
+    			{mimetypes, [
+          			{<<".css">>, [<<"text/css">>]},
+          			{<<".js">>, [<<"application/javascript">>]}]}]},
+	    	{[], yasa_default_handler, []}
 		]}
 	],
 	%% Name, NbAcceptors, Transport, TransOpts, Protocol, ProtoOpts

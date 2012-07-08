@@ -10,12 +10,11 @@
             });
 
             $.getJSON("/api/keys", function(data) {
-                $.each(data, function(i, key) {
-                    $("#keys").append("<li data-name='"+key+"'><a href='#'>" + key + "</a></li>");
-                });
+                    $('#keys').jqxTree({ source: data, height: '600px', width: '300px' })
+                    //$("#keys").append("<li data-name='"+key+"'><a href='#'>" + key + "</a></li>");
             });
 
-            $('#keys li').click(function() {
+            $('#keys .keyname').click(function() {
                 $('#timeframe').show();
                 $.dashboard.graph( $(this).data('name') );
                 return false;
