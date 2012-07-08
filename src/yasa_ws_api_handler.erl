@@ -6,7 +6,7 @@
 	registered = [] :: [binary()]
 }).
 
--define(TICKER, 59000).
+-define(TICKER, 2000).
 
 init(_Transport, Req, _Opts, _Active) ->
 	erlang:start_timer(?TICKER, self(), tick),
@@ -38,7 +38,7 @@ stream(Data, Req, State = #state{registered = Registered}) ->
 info({timeout, _TRef, tick}, Req, State = #state{registered = Registered}) ->
 	erlang:start_timer(?TICKER, self(), tick),	
 	Mapper = fun(Key) ->
-		{200, Values} = yasa_handler_utils:reply(Key, <<"get">>, [{<<"range">>, <<"-10min">>}]),
+		{200, Values} = yasa_handler_utils:reply(Key, <<"get">>, [{<<"range">>, <<"-10sec">>}]),
 		[{key, Key}, {values, Values}]
 	end,
 	Data = lists:map(Mapper, Registered),

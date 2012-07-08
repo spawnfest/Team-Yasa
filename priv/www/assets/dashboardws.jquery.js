@@ -1,46 +1,4 @@
 (function($) {
-    var bullet = $.bullet('ws://localhost:8080/wsapi');
-    bullet.onopen = function(){
-        console.log('WebSocket: opened');
-    };
-    bullet.onclose = function(){
-        console.log('WebSocket: closed');
-    };
-    bullet.onmessage = function(e){
-        if(e.data === 'pong'){
-        } else if (e.data === 'ok') {    
-        } else if (e.data === 'error:invalid request') {
-        } else {
-            var obj = jQuery.parseJSON(e.data);
-            for (x in obj) {
-                var key = obj[x].key;
-                var values = obj[x].values;
-            }
-        }  
-    };
-    bullet.onheartbeat = function(){
-        bullet.send('ping');
-    };
-
-    var chart;
-    $(document).ready(function() {
-        chart = new Highcharts.Chart({
-            chart: {
-                renderTo: 'graph',
-                type: 'spline',
-                animation: false
-            },
-            title: {
-                text: 'Awesome WS Demo'
-            },
-            xAxis: {
-                type: 'datetime'
-            },
-            yAxis: {
-                title: ''
-            },
-        });
-    });
     $.dashboard = {
 
         init : function() {
@@ -55,40 +13,82 @@
 
             $('#keys .keyname').click(function() {
                 if($(this).data('clicked') === true){
-                    bullet.send(JSON.stringify({method: 'unregister', key: $(this).data('name')}));
+                    $.dashboard.bullet.send(JSON.stringify({method: 'unregister', key: $(this).data('name')}));
+                    var serie = $.dashboard.chart.get($(this).data('name'));
+                    serie.remove(true);
                     $(this).data('clicked', false); 
                 } else {
-                    bullet.send(JSON.stringify({method: 'register', key: $(this).data('name'), range: '-5min'}))
+                    $.dashboard.bullet.send(JSON.stringify({method: 'register', key: $(this).data('name'), range: '-40sec'}))
                     //$.dashboard.graph( $(this).data('name'));
                     $(this).data('clicked', true); 
                 }
                 return false;
             });
+            $.dashboard.websocket_init();
+            $.dashboard.chart_init();
         },
         
-        graph : function(key, range) {
-            clearTimeout(this.timer);
-            range = "-30sec";
+        websocket_init : function() {
+            $.dashboard.bullet = $.bullet('ws://'+location.hostname+(location.port ? ':'+location.port: '')+'/wsapi');
+            $.dashboard.bullet.onopen = function(){
+                console.log('WebSocket: opened');
+            };
+            $.dashboard.bullet.onclose = function(){
+                console.log('WebSocket: closed');
+            };
+            $.dashboard.bullet.onmessage = function(e){
+                if(e.data === 'pong'){
+                } else if (e.data === 'ok') {    
+                } else if (e.data === 'error:invalid request') {
+                } else {
+                    var obj = jQuery.parseJSON(e.data);
+                    for (x in obj) {
+                        var key = obj[x].key;
+                        var values = obj[x].values;
+                        values = values.splice(-30);
+                        values = $.map(values, function(arr) { return [[arr[0] * 1000, arr[1]]] });
+                        var initial = obj[x].init;
+                        if(initial === true){
 
-            var options = {
+                            $.dashboard.chart.addSeries({id: key, name:key, data:values});
+                        } else {
+                            var serie = $.dashboard.chart.get(key);
+                            var shift = serie.data.length >= 30;
+                            var laststamp = serie.data[serie.data.length-1].x;
+                            for(y in values){
+                                var value = values[y];
+                                if(value[0] > laststamp){
+                                    serie.addPoint(value, true, shift)
+                                }
+                            }
+                        }
+                    }
+                }  
+            };
+            $.dashboard.bullet.onheartbeat = function(){
+                $.dashboard.bullet.send('ping');
+            };
+        },
+
+        chart_init: function() {
+            $.dashboard.chart = new Highcharts.Chart({
                 chart: {
                     renderTo: 'graph',
-                    type: 'spline'
+                    type: 'spline',
+                    animation: false
                 },
                 title: {
-                    text: key
+                    text: 'Awesome WS Demo'
+                },
+                xAxis: {
+                    type: 'datetime'
                 },
                 yAxis: {
                     title: ''
                 },
-                xAxis: {
-                    type: 'datetime'
-                }
-            };
+            });
+        }
 
-            $.dashboard.key = key;
-            $.dashboard.range = range;
-            $.dashboard.chart = new Highcharts.Chart(options);
-        },
+
     }
 })(jQuery);
