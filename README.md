@@ -6,26 +6,28 @@ HTTP API
 --------
 To increment a counter:
 
-	/incr?key="keyname"&value=<integer_value>
+	/api/incr?key="keyname"&value=<integer_value>
 
 To set a gauge:
 
-	/set?key="keyname"&value=<integer_value>
+	/api/set?key="keyname"&value=<integer_value>
 
 To get for a key:
 
-	/get?key="keyname"&range=-<integer_value><hour|min|sec|day|month|year>
+	/api/get?key="keyname"&range=-<integer_value><hour|min|sec|day|month|year>
 
 
 WebSocket API
 -------------
+
+Connect to websocket on /wsapi then;
 
 To register to the feed of a key. Returns data for the given range up on registration and
 server keeps sending new data periodically.
 
 	{method: "register", key: "keyname", range: "-<integer_value><hour|min|sec|day|month|year>"}
 
-Unregister from a registered feed.
+To unregister from a registered feed.
 
 	{method: "unregister", key: "keyname"}
 

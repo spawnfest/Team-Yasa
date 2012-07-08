@@ -7,13 +7,40 @@
         console.log('WebSocket: closed');
     };
     bullet.onmessage = function(e){
-        if(e.data !== 'pong'){
-            alert(e.data);
-        }        
+        if(e.data === 'pong'){
+        } else if (e.data === 'ok') {    
+        } else if (e.data === 'error:invalid request') {
+        } else {
+            var obj = jQuery.parseJSON(e.data);
+            for (x in obj) {
+                var key = obj[x].key;
+                var values = obj[x].values;
+            }
+        }  
     };
     bullet.onheartbeat = function(){
         bullet.send('ping');
     };
+
+    var chart;
+    $(document).ready(function() {
+        chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'graph',
+                type: 'spline',
+                animation: false
+            },
+            title: {
+                text: 'Awesome WS Demo'
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: ''
+            },
+        });
+    });
     $.dashboard = {
 
         init : function() {
@@ -38,29 +65,30 @@
                 return false;
             });
         },
+        
+        graph : function(key, range) {
+            clearTimeout(this.timer);
+            range = "-30sec";
 
-        graph : function(key) {
             var options = {
                 chart: {
                     renderTo: 'graph',
-                    type: 'area'
+                    type: 'spline'
                 },
                 title: {
                     text: key
+                },
+                yAxis: {
+                    title: ''
                 },
                 xAxis: {
                     type: 'datetime'
                 }
             };
 
-
-            $.getJSON("/api/get?range=-5min&key="+key, function(data) {
-                data = $.map(data, function(arr) { return [[arr[0] * 1000, arr[1]]] });
-                console.log(data);
-                
-                options.series = [{name: key, data: data}];
-                new Highcharts.Chart(options);
-            });
-        }
+            $.dashboard.key = key;
+            $.dashboard.range = range;
+            $.dashboard.chart = new Highcharts.Chart(options);
+        },
     }
 })(jQuery);
