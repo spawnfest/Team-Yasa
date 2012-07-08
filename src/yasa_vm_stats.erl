@@ -19,7 +19,7 @@
          code_change/3]).
 
 -record(state, {}).
--define(REPORT_TIME, 10000).
+-define(REPORT_TIME, 1000).
 -define(PVAL(X, PL), proplists:get_value(X, PL)).
 
 %%%===================================================================
