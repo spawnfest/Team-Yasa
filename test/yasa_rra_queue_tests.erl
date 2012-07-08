@@ -2,21 +2,32 @@
 -include("rra_queue.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% TESTS DESCRIPTIONS %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 rra_queue_test_() ->
-    [{setup, fun create_rra_queues/0, fun test_gauge_push/1},
-    {setup, fun create_rra_queues/0, fun test_counter_push/1},
-    {setup, fun create_rra_queues/0, fun test_counter_push_prev/1},
+    [{foreach, fun create_rra_queues/0, 
+    	[fun test_gauge_push/1, 
+    	 fun test_counter_push/1, 
+    	 fun test_counter_push_prev/1]},
     {setup, fun create_long_rra_queue/0, fun test_select_range/1}].
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%%% SETUP FUNCTIONS %%%
+%%%%%%%%%%%%%%%%%%%%%%%
 
 create_rra_queues() ->
     [yasa_rra_queue:new(1, 1, 3), yasa_rra_queue:new(3, 3, 3)].
 
 create_long_rra_queue() ->
-	Q = lists:foldl(fun(Elem, Acc) -> 
+	lists:foldl(fun(Elem, Acc) -> 
 			timer:sleep(1000),
 			yasa_rra_queue:push_gauge(Elem, Acc) 
-	end, yasa_rra_queue:new(1, 10, 15), lists:seq(1, 15)), 
-	Q.
+	end, yasa_rra_queue:new(1, 10, 15), lists:seq(1, 15)). 
+
+%%%%%%%%%%%%%%%%%%%%
+%%% ACTUAL TESTS %%%
+%%%%%%%%%%%%%%%%%%%%
 
 test_gauge_push([H | _Tail]) ->
     RQ = yasa_rra_queue:push_gauge(4, H),
