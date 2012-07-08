@@ -3,18 +3,41 @@ Yasa
 
 YASA is a high performance stat aggregation daemon which collects numeric time-series data based on given keys.
 Data is then aggregated and periodically dumped to individual Round Robin Databases depending on its key.
-Since YASA is able to load these archives into state its able to significantly reduce its I/O footprint.
-Each RRD can queried via YASA's WebSocket/HTTP API allowing clients to steam real-time data.
+Since YASA is able to load recently touched RRD archives into state its able to significantly reduce its I/O footprint
+and quickly service requests without reading/writing to disk.
+Each RRD can be queried via Yasa's WebSocket or HTTP API allowing clients to steam/update data.
+
+Currently Yasa only supports two data types for logging data. Gauges and Counters. Gauges are used for
+storing things like temperature, memory, eg. a value at a specific point in time. Counters are used for
+calculating things like bandwidth, requests/second ie. some kind of rate. (see API)
+
+Configuration
+=============
+
+Since RRD files are fixed in sized you must define how much historical data you want to keep lying around.
+Yasa will default to 60 samples of 1 second data and 1000 samples of 1 minute data. You can define as
+many retentions as you like. For example, in your app.config:
+
+	[
+		{yasa,[
+      {port, 8080}
+			{retentions, [{1,60},{60,1000}]}
+		]}
+	].
+
+API Examples
+============
 
 HTTP API
 --------
-To increment a counter:
-
-	/api/incr?key="keyname"&value=<integer_value>
 
 To set a gauge:
 
 	/api/set?key="keyname"&value=<integer_value>
+
+To increment a counter:
+
+	/api/incr?key="keyname"&value=<integer_value>
 
 To get for a key:
 
@@ -52,18 +75,3 @@ Possible Responses:
 		upon ping
 	4) [{"key":"keyname", "values":[[timestamp, value], [timestamp, value], ...]}, ...]
 		on register and periodic updates
-
-
-Configuration
--------------
-
-	[
-		{yasa,[
-			{port, 8080},
-			{retentions, [{10,1080},{40,900}]}
-		]}
-	].
-
-Port is the port of the server, defaults to 8080 if not defined.
-Retentions are sampling rate in terms of sample once every X seconds and how many samples you want at that rate. 
-The above example translates in to 1080 10 second samples which stores the data for last 3 hours (3 hours = 10800 seconds) and 400 samples at 40 second interval which stores last 9 hours. You can define as many retentions as you want as long as they are divisable by the smallest retention. (you can't have [{5,X}, {10,Y}, {27,Z}]).
